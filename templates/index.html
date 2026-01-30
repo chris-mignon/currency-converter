@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter | UniRate API</title>
+    <!-- Bootstrap 5 for responsive design -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💱</text></svg>">
+</head>
+<body>
+    <div class="container py-5">
+        <!-- Header -->
+        <header class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-exchange-alt me-2"></i>Currency Converter
+            </h1>
+            <p class="lead text-muted">Real-time exchange rates for 593+ currencies including cryptocurrencies</p>
+            <div class="alert alert-info d-inline-flex align-items-center" role="alert">
+                <i class="fas fa-sync-alt me-2"></i>
+                Rates update every 15 minutes
+            </div>
+        </header>
+
+        <!-- Main Converter Card -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-calculator me-2"></i>Currency Converter
+                        </h3>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Converter Form -->
+                        <div class="row g-3">
+                            <!-- Amount Input -->
+                            <div class="col-md-12">
+                                <label for="amount" class="form-label fw-bold">
+                                    <i class="fas fa-money-bill-wave me-1"></i>Amount
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">$</span>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="amount" 
+                                           value="100" 
+                                           min="0.01" 
+                                           step="0.01"
+                                           placeholder="Enter amount">
+                                    <button class="btn btn-outline-secondary" type="button" id="reverse-currencies">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- From Currency -->
+                            <div class="col-md-6">
+                                <label for="fromCurrency" class="form-label fw-bold">
+                                    <i class="fas fa-arrow-up me-1"></i>From Currency
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-flag"></i>
+                                    </span>
+                                    <select class="form-select" id="fromCurrency">
+                                        <option value="USD" selected>USD - United States Dollar</option>
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- To Currency -->
+                            <div class="col-md-6">
+                                <label for="toCurrency" class="form-label fw-bold">
+                                    <i class="fas fa-arrow-down me-1"></i>To Currency
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-flag"></i>
+                                    </span>
+                                    <select class="form-select" id="toCurrency">
+                                        <option value="EUR">EUR - Euro</option>
+                                        <!--<option value="XCD">XCD - East Caribbean Dollar</option> -->
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Convert Button -->
+                            <div class="col-12 mt-4">
+                                <button class="btn btn-primary btn-lg w-100 py-3" id="convert-btn">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    <span id="btn-text">Convert Currency</span>
+                                    <span id="loading-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                                </button>
+                            </div>
+
+                            <!-- Result Display -->
+                            <div class="col-12 mt-4">
+                                <div class="alert alert-success fade show d-none" id="result-container" role="alert">
+                                    <h4 class="alert-heading">
+                                        <i class="fas fa-check-circle me-2"></i>Conversion Result
+                                    </h4>
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h2 id="result-text" class="mb-0">100 USD = 92.45 EUR</h2>
+                                            <p class="text-muted mb-0 mt-2" id="rate-text">1 USD = 0.9245 EUR</p>
+                                        </div>
+                                        <button class="btn btn-outline-success" id="copy-result">
+                                            <i class="fas fa-copy me-1"></i>Copy
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Error Display -->
+                                <div class="alert alert-danger fade show d-none" id="error-container" role="alert">
+                                    <h5 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Error
+                                    </h5>
+                                    <p id="error-text" class="mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rate Table Section -->
+                        <div class="row mt-5">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="mb-0">
+                                        <i class="fas fa-table me-2"></i>Popular Exchange Rates
+                                    </h4>
+                                    <div class="input-group" style="width: 200px;">
+                                        <span class="input-group-text bg-light">
+                                            <i class="fas fa-filter"></i>
+                                        </span>
+                                        <select class="form-select" id="baseCurrencySelect">
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                            <option value="GBP">GBP</option>
+                                            <option value="JPY">JPY</option>
+                                            <option value="CAD">CAD</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col">Currency</th>
+                                                <th scope="col">Code</th>
+                                                <th scope="col" class="text-end">Exchange Rate</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="rates-table">
+                                            <!-- Rates will be loaded dynamically -->
+                                            <tr>
+                                                <td colspan="3" class="text-center py-4">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Loading rates...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light py-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Data provided by <a href="https://unirateapi.com" target="_blank">UniRateAPI</a>
+                                </small>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <small class="text-muted">
+                                    <i class="fas fa-database me-1"></i>
+                                    593 currencies • Updated every 15 min
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Status -->
+        <div class="row mt-4 justify-content-center">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted" id="api-status">
+                        <i class="fas fa-circle text-success me-1"></i>
+                        API Status: <span id="status-text">Checking...</span>
+                    </small>
+                    <small class="text-muted">
+                        <i class="fas fa-code me-1"></i>
+                        Powered by Flask & UniRateAPI
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
